@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Config/firebaseconfig';
+import { auth, db } from '../Config/firebaseconfig';
+import { doc, setDoc } from 'firebase/firestore';
 
 
   const Registro = ({ navigation }) => {
@@ -24,7 +25,17 @@ const handleRegister = async () => {
   }
 
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Salvar dados adicionais no Firestore
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      name: name,
+      email: email,
+      createdAt: new Date().toISOString(),
+    });
+
     Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
     navigation.navigate('Login');
   } catch (error) {
