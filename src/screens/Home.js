@@ -1,23 +1,49 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  Image,
   TouchableOpacity,
   Alert,
+  ScrollView,
+  FlatList
 } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import { parseStringPromise } from 'xml2js';
+
+const destaques = [
+  {
+    id: 'fiat',
+    nome: 'Fiat',
+    descricao: 'Fiat é uma marca italiana conhecida por carros econômicos e populares no Brasil.',
+    origem: 'Itália',
+    fundacao: '1899',
+  },
+  {
+    id: 'volkswagen',
+    nome: 'Volkswagen',
+    descricao: 'Volkswagen é uma das maiores fabricantes do mundo, conhecida pela qualidade e inovação.',
+    origem: 'Alemanha',
+    fundacao: '1937',
+  },
+  {
+    id: 'chevrolet',
+    nome: 'Chevrolet',
+    descricao: 'Chevrolet é uma marca americana famosa pela diversidade de modelos e robustez.',
+    origem: 'Estados Unidos',
+    fundacao: '1911',
+  },
+];
 
 const Home = () => {
+  const navigation = useNavigation();
+
   const [marcas, setMarcas] = useState([]);
   const [modelos, setModelos] = useState([]);
   const [anos, setAnos] = useState([]);
   const [carro, setCarro] = useState(null);
-  const [imagem, setImagem] = useState('');
 
   const [marcaSelecionada, setMarcaSelecionada] = useState('');
   const [modeloSelecionado, setModeloSelecionado] = useState('');
@@ -25,7 +51,6 @@ const Home = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // Carregar marcas ao iniciar
   useEffect(() => {
     axios
       .get('https://parallelum.com.br/fipe/api/v1/carros/marcas')
@@ -33,7 +58,6 @@ const Home = () => {
       .catch(() => Alert.alert('Erro ao carregar marcas'));
   }, []);
 
-  // Carregar modelos ao selecionar marca
   useEffect(() => {
     if (!marcaSelecionada) return;
 
@@ -49,7 +73,6 @@ const Home = () => {
       .catch(() => Alert.alert('Erro ao carregar modelos'));
   }, [marcaSelecionada]);
 
-  // Carregar anos ao selecionar modelo
   useEffect(() => {
     if (!modeloSelecionado) return;
 
@@ -65,65 +88,51 @@ const Home = () => {
       .catch(() => Alert.alert('Erro ao carregar anos'));
   }, [modeloSelecionado]);
 
-  // Buscar imagem do carro
- const buscarImagem = async (termo) => {
-  try {
-    const res = await axios.get(
-      `https://www.carimagery.com/api.asmx/GetImageUrl?searchTerm=${encodeURIComponent(termo)}`,
-      { responseType: 'text' } // <-- isso evita o erro
-    );
+  const buscarPrecoFipe = async () => {
+    if (!marcaSelecionada || !modeloSelecionado || !anoSelecionado) {
+      Alert.alert('Selecione marca, modelo e ano');
+      return;
+    }
 
-    const json = await parseStringPromise(res.data);
-    const imagem = json.string._;
+    setLoading(true);
+    setCarro(null);
 
-    if (!imagem || imagem.includes('no-image')) return '';
+    try {
+      const res = await axios.get(
+        `https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaSelecionada}/modelos/${modeloSelecionado}/anos/${anoSelecionado}`
+      );
 
-    return imagem;
-  } catch (err) {
-    console.error('Erro ao buscar imagem:', err.message);
-    return '';
-  }
-};
- 
-const buscarPrecoFipe = async () => {
-  if (!marcaSelecionada || !modeloSelecionado || !anoSelecionado) {
-    Alert.alert('Selecione marca, modelo e ano');
-    return;
-  }
+      setCarro(res.data);
+    } catch (error) {
+      console.error('Erro ao buscar dados FIPE:', error.message);
+      Alert.alert('Erro ao buscar dados da Tabela FIPE');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  setLoading(true);
-  setCarro(null);
-  setImagem('');
-
-  try {
-    const res = await axios.get(
-      `https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaSelecionada}/modelos/${modeloSelecionado}/anos/${anoSelecionado}`
-    );
-
-   console.log('Dados retornados da FIPE:', res.data); // Veja se preço e nome estão vindo
-
-    setCarro(res.data);
-
-    const termoImagem = `${res.data.marca} ${res.data.modelo} ${res.data.anoModelo} car`;
-    const img = await buscarImagem(termoImagem);
-
-    console.log('🔍 Termo imagem:', termoImagem);
-    console.log('🖼️ Imagem encontrada:', img);
-
-    setImagem(img || '');
-  } catch (error) {
-    console.error('Erro ao buscar dados FIPE:', error.message);
-    Alert.alert('Erro ao buscar dados da Tabela FIPE');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  // renderDestaque DENTRO do componente para usar navigation normalmente
+  const renderDestaque = ({ item }) => (
+    <TouchableOpacity
+      style={styles.destaqueCard}
+      onPress={() => navigation.navigate('MarcaInfo', { marca: item })}
+    >
+      <Text style={styles.destaqueTexto}>{item.nome}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Consulta Tabela FIPE</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.titulo}>Consultar Tabela Fipe</Text>
 
+       {!loading && (
+  <View style={styles.cardHistoria}>
+    <Text style={styles.historia}>
+      A Tabela Fipe expressa preços médios para pagamento à vista, praticados na revenda de veículos para o consumidor final, pessoa física, no mercado nacional, servindo apenas como um parâmetro para negociações ou avaliações. Os preços efetivamente praticados variam em função da região, conservação, cor, acessórios ou qualquer outro fator que possa influenciar as condições de oferta e procura por um veículo específico.
+    </Text>
+  </View>
+)}
+     
       <Picker
         selectedValue={marcaSelecionada}
         onValueChange={setMarcaSelecionada}
@@ -166,40 +175,50 @@ const buscarPrecoFipe = async () => {
       </TouchableOpacity>
 
       {loading && <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />}
-{carro && (
-  <View style={styles.card}>
-    {imagem ? (
-      <Image source={{ uri: imagem }} style={styles.image} />
-    ) : (
-      <View style={[styles.image, styles.imagePlaceholder]}>
-        <Text style={styles.placeholderText}>Imagem não encontrada</Text>
-      </View>
-    )}
 
-    <Text style={styles.nome}>{carro.Modelo}</Text>
-    <Text style={styles.preco}>Preço FIPE: {carro.Valor}</Text>
-    <Text style={styles.detalhes}>Ano: {carro.AnoModelo}</Text>
-    <Text style={styles.detalhes}>Combustível: {carro.Combustivel}</Text>
-    <Text style={styles.detalhes}>Código Fipe: {carro.CodigoFipe}</Text>
-  </View>
-)}
-
-
-    </View>
+      {carro && (
+        <View style={styles.card}>
+          <Text style={styles.nome}>{carro.Modelo}</Text>
+          <Text style={styles.preco}>Preço FIPE: {carro.Valor}</Text>
+          <Text style={styles.detalhes}>Ano: {carro.AnoModelo}</Text>
+          <Text style={styles.detalhes}>Combustível: {carro.Combustivel}</Text>
+          <Text style={styles.detalhes}>Código Fipe: {carro.CodigoFipe}</Text>
+        </View>
+      )}
+   <Text style={styles.subtitulo}>As Marcas mais procuradas</Text>
+ <FlatList
+        data={destaques}
+        keyExtractor={(item) => item.id}
+        renderItem={renderDestaque}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.destaqueContainer}
+      />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  // seus estilos aqui, como no seu código original...
   container: {
     flex: 1,
     backgroundColor: '#f2f2f2',
     padding: 16,
   },
   titulo: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#222',
+  },
+  subtitulo: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginTop: 24,
+    marginBottom: 12,
     textAlign: 'center',
+    color: '#333',
   },
   picker: {
     backgroundColor: '#fff',
@@ -209,9 +228,9 @@ const styles = StyleSheet.create({
   botao: {
     backgroundColor: '#007bff',
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   botaoTexto: {
     color: '#fff',
@@ -220,29 +239,16 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    elevation: 3,
+    padding: 20,
+    borderRadius: 16,
+    elevation: 4,
+    marginTop: 10,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
     alignItems: 'center',
-  },
-  image: {
-    width: '100%',
-    height: 160,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 160,
-    backgroundColor: '#eee',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  info: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   preco: {
     fontSize: 16,
@@ -254,10 +260,59 @@ const styles = StyleSheet.create({
     color: '#444',
     marginTop: 4,
   },
-  placeholderText: {
-    color: '#888',
-    fontSize: 14
-  }
+  destaqueContainer: {
+    paddingBottom: 10,
+    paddingLeft: 4,
+  },
+  destaqueCard: {
+    backgroundColor: '#fff',
+    padding: 24,
+    marginRight: 12,
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  destaqueTexto: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  nome: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  historia: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    marginTop: 20,
+    marginBottom: 30,
+    paddingHorizontal: 10,
+  },
+  cardHistoria: {
+  backgroundColor: '#fff',
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 30,
+  // Shadow iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  // Elevation Android
+  elevation: 6,
+},
+historia: {
+  fontSize: 16,
+  textAlign: 'center',
+  color: '#555',
+},
+
 });
 
 export default Home;

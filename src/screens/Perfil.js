@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Image,
+  TouchableOpacity
+} from 'react-native';
 import { auth, db } from '../Config/firebaseconfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
@@ -53,35 +61,80 @@ const Perfil = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Perfil do Usuário</Text>
-      <Text style={styles.label}>Nome: {userData?.name}</Text>
-      <Text style={styles.label}>Email: {userData?.email}</Text>
-      <Text style={styles.label}>Criado em: {new Date(userData?.createdAt).toLocaleString()}</Text>
+      <View style={styles.profileCard}>
+        <Image
+          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
 
-      <View style={{ marginTop: 20 }}>
-        <Button title="Sair" color="#ff3b30" onPress={handleLogout} />
+          style={styles.profileImage}
+        />
+        <Text style={styles.name}>{userData?.name}</Text>
+        <Text style={styles.email}>{userData?.email}</Text>
+        <Text style={styles.createdAt}>
+          Criado em: {new Date(userData?.createdAt).toLocaleDateString()}
+        </Text>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Sair da Conta</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
+export default Perfil;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#eef2f5',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    padding: '20'
   },
-  title: {
-    fontSize: 24,
+  profileCard: {
+    backgroundColor: '#fff',
+    width: '100%',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+  },
+  name: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+    color: '#333',
+    marginBottom: 4,
   },
-  label: {
+  email: {
     fontSize: 16,
-    marginBottom: 10,
+    color: '#666',
+    marginBottom: 4,
+  },
+  createdAt: {
+    fontSize: 14,
+    color: '#999',
+    marginBottom: 20,
+  },
+  logoutButton: {
+    backgroundColor: '#ff3b30',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
-
-export default Perfil;
