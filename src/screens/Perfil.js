@@ -1,3 +1,4 @@
+// src/screens/Perfil.js
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -11,12 +12,14 @@ import {
 import { auth, db } from '../Config/firebaseconfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native'; // Importar useFocusEffect
 
 const Perfil = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async () => {
+    setLoading(true); // Garantir que o loading seja ativado ao recarregar
     try {
       const user = auth.currentUser;
       if (user) {
@@ -30,31 +33,50 @@ const Perfil = ({ navigation }) => {
         }
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Erro ao carregar dados.');
+      console.error("Erro ao carregar dados do perfil:", error);
+      Alert.alert('Erro', 'Erro ao carregar dados do perfil.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Usar useFocusEffect para recarregar os dados quando a tela ganhar foco
+  // Isso é útil se os dados do perfil puderem ser alterados em outra parte do app
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserData();
+    }, [])
+  );
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
       Alert.alert('Logout', 'Você saiu da sua conta.');
-      navigation.navigate('Login');
+      navigation.reset({ // Resetar o stack de navegação para a tela de Login
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
     } catch (error) {
       Alert.alert('Erro', 'Erro ao fazer logout.');
     }
   };
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}> {/* Usar um container específico ou o mesmo container se já centraliza */}
         <ActivityIndicator size="large" color="#007bff" />
+        <Text style={styles.loadingText}>Carregando perfil...</Text>
+      </View>
+    );
+  }
+
+  if (!userData) { // Caso não haja dados do usuário após o carregamento
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Não foi possível carregar os dados do usuário.</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={loadUserData}>
+            <Text style={styles.logoutText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -63,15 +85,16 @@ const Perfil = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-
+          source={{ uri: userData.profileImageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }} // Usar uma imagem de perfil do userData se existir
           style={styles.profileImage}
         />
         <Text style={styles.name}>{userData?.name}</Text>
         <Text style={styles.email}>{userData?.email}</Text>
-        <Text style={styles.createdAt}>
-          Criado em: {new Date(userData?.createdAt).toLocaleDateString()}
-        </Text>
+        {userData?.createdAt && (
+            <Text style={styles.createdAt}>
+            Membro desde: {new Date(userData.createdAt).toLocaleDateString()}
+            </Text>
+        )}
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Sair da Conta</Text>
@@ -84,16 +107,28 @@ const Perfil = ({ navigation }) => {
 export default Perfil;
 
 const styles = StyleSheet.create({
-  container: {
+  container: { // Este container é para o conteúdo da tela já carregada
     flex: 1,
     backgroundColor: '#eef2f5',
+    justifyContent: 'center', // Centraliza o profileCard verticalmente
+    alignItems: 'center', // Centraliza o profileCard horizontalmente
+    padding: 20, // Corrigido de string para número
+  },
+  loadingContainer: { // Container para o estado de loading
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: '20'
+    backgroundColor: '#eef2f5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
   },
   profileCard: {
     backgroundColor: '#fff',
-    width: '100%',
+    width: '100%', // Ocupa a largura disponível respeitando o padding do container
+    maxWidth: 400, // Largura máxima para o card
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -108,6 +143,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginBottom: 16,
+    backgroundColor: '#e0e0e0', // Cor de fundo caso a imagem demore a carregar
   },
   name: {
     fontSize: 22,

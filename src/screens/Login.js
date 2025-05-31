@@ -33,7 +33,7 @@ const Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>App de Carros</Text>
+      <Text style={styles.title}>Ycars</Text>
       
       <TextInput
         style={styles.input}
