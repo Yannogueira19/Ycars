@@ -10,6 +10,9 @@ const MarcaInfo = ({ route }) => {
       <Text style={styles.descricao}>{marca.descricao}</Text>
       <Text style={styles.info}>Origem: {marca.origem}</Text>
       <Text style={styles.info}>Fundação: {marca.fundacao}</Text>
+      <Text style={styles.info}>Fundador: {marca.fundador}</Text>
+      <Text style={styles.info}>Sede Atual: {marca.sedeAtual}</Text>
+      <Text style={styles.info}>Ceo/Atual: {marca.ceo}</Text>
     </View>
   );
 };

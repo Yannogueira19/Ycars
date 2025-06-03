@@ -20,23 +20,32 @@ const destaques = [
   {
     id: 'fiat',
     nome: 'Fiat',
-    descricao: 'Fiat é uma marca italiana conhecida por carros econômicos e populares no Brasil.',
+    descricao: 'A Fiat, fundada em 1899 em Turim, Itália, é uma das marcas automotivas mais tradicionais do mundo. Chegou ao Brasil em 1976 e se destacou com modelos populares como Uno e Strada. Hoje, integra o grupo Stellantis e investe em inovação e mobilidade sustentável.',
     origem: 'Itália',
     fundacao: '1899',
+    fundador: 'Giovanni Agnelli (1866–1945)',
+    sedeAtual: 'Turim, Itália',
+    ceo: 'Antonio Filosa'
   },
   {
     id: 'volkswagen',
     nome: 'Volkswagen',
-    descricao: 'Volkswagen é uma das maiores fabricantes do mundo, conhecida pela qualidade e inovação.',
+    descricao: 'A Volkswagen é uma fabricante alemã de automóveis fundada em 1937. É conhecida por modelos icônicos como o Fusca e o Golf, e é uma das maiores montadoras do mundo, destacando-se pela qualidade, inovação e engenharia.',
     origem: 'Alemanha',
     fundacao: '1937',
+    fundador: 'Deutsche Arbeitsfront',
+    sedeAtual: 'Wolfsburg, Alemanha',
+    ceo: 'Oliver Blume'
   },
   {
     id: 'chevrolet',
     nome: 'Chevrolet',
-    descricao: 'Chevrolet é uma marca americana famosa pela diversidade de modelos e robustez.',
+    descricao: 'A Chevrolet é uma fabricante de automóveis americana fundada em 1911. É uma das principais marcas da General Motors (GM) e é conhecida por modelos populares como o Camaro, Onix e Silverado. Destaca-se por sua ampla presença global e diversidade de veículos.',
     origem: 'Estados Unidos',
     fundacao: '1911',
+    fundador: 'Louis Chevrolet e William C. Durant',
+    sedeAtual: 'Detroit, Michigan, EUA',
+    ceo: 'Mary Barra'
   },
 ];
 
